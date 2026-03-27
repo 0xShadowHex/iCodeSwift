@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>iCodeSwift - Run Swift in browser</title>
+  <meta property="og:title" content="iCodeSwift" />
+  <meta property="og:description" content="Run pure swift in browser without imports using swift 5.8 toolchain" />
+  <meta property="og:image" content="https://icodeswift.pages.dev/resources/orange_swift_icon.png" />
+  <link rel="icon" href="./resources/orange_swift_icon.png" type="image/x-icon">
+  <meta name="google-site-verification" content="YMTVv4ZX9GsSdNZMTwi7U5n1n_ATOZ77heuy_7TCdPQ" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    *::selection {
+      background: var(--primary);
+    }
+
+    :root {
+      --primary: #ff6b35;
+      --primary-dark: #e55100;
+      --primary-light: #ffa366;
+      --secondary: #004e89;
+      --accent: #f7b32b;
+      --dark-bg: #0f1419;
+      --light-text: #ffffff;
+      --gray-text: #c0c0c0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: #000000;
+    }
+
+    body {
+      font-family: 'Sora', sans-serif;
+      background: linear-gradient(135deg, #0f1419 0%, #000000 50%, #0d2a47 100%);
+      color: var(--light-text);
+      line-height: 1.6;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(15, 20, 25, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255, 107, 53, 0.2);
+      animation: slideDown 0.6s ease-out;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    nav {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 800;
+      font-family: 'Playfair Display', serif;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -1px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--gray-text);
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.3s ease, text-shadow 0.3s ease;
+      position: relative;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary);
+      text-shadow: 0 0 10px rgba(255, 107, 53, 0.5);
+    }
+
+    .nav-links a::before {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--primary);
+      transition: width 0.3s ease;
+    }
+
+    .nav-links a:hover::before {
+      width: 100%;
+    }
+
+    .cta-button {
+      background: transparent;
+      color: var(--light-text);
+      padding: 0.8rem 1.8rem;
+      border: 2px solid var(--light-text);
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      font-size: 1rem;
+    }
+
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: none;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .cta-button:active {
+      transform: translateY(0);
+    }
+
+    .hero {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      align-items: center;
+      min-height: 90vh;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(255, 107, 53, 0.15) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: float 6s ease-in-out infinite;
+      z-index: 0;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0px);
+      }
+
+      50% {
+        transform: translateY(-30px);
+      }
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      animation: slideInLeft 0.8s ease-out;
+      text-align: center;
+    }
+
+    @keyframes slideInLeft {
+      from {
+        opacity: 0;
+        transform: translateX(-40px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 3rem;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 2rem;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 50%, var(--light-text) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      color: var(--gray-text);
+      margin-bottom: 2rem;
+      line-height: 1.8;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .primary-btn {
+      background: transparent;
+      color: var(--light-text);
+      padding: 1.1rem 2.5rem;
+      border: 2px solid var(--light-text);
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: none;
+    }
+
+    .primary-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: none;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .secondary-btn {
+      background: transparent;
+      color: var(--light-text);
+      padding: 1.1rem 2.5rem;
+      border: 2px solid var(--light-text);
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .secondary-btn:hover {
+      background: transparent;
+      transform: translateY(-3px);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .hero-image {
+      position: relative;
+      z-index: 1;
+      animation: slideInRight 0.8s ease-out;
+      width: 100%;
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(40px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .image-card {
+      width: 100%;
+      min-height: 500px;
+      background: transparent;
+      border: none;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      color: var(--gray-text);
+      position: relative;
+    }
+
+    .image-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .features {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 6rem 2rem;
+      position: relative;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 5rem;
+      animation: fadeInUp 0.8s ease-out;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .section-header h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .section-header p {
+      color: var(--gray-text);
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+
+    .feature-card {
+      background: transparent;
+      border: 1px solid rgba(192, 192, 192, 0.3);
+      padding: 2rem;
+      transition: all 0.4s ease;
+      position: relative;
+      overflow: hidden;
+      animation: fadeInUp 0.8s ease-out;
+      animation-fill-mode: both;
+    }
+
+    .feature-card:nth-child(1) {
+      animation-delay: 0.1s;
+    }
+
+    .feature-card:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .feature-card:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+
+    .feature-card:nth-child(4) {
+      animation-delay: 0.4s;
+    }
+
+    .feature-card:nth-child(5) {
+      animation-delay: 0.5s;
+    }
+
+    .feature-card:nth-child(6) {
+      animation-delay: 0.6s;
+    }
+
+    .feature-card::before {
+      display: none;
+    }
+
+    .feature-card:hover {
+      border-color: var(--primary);
+      background: transparent;
+      transform: translateY(-8px);
+      box-shadow: none;
+    }
+
+    .feature-icon {
+      display: none;
+    }
+
+    .feature-card h3 {
+      font-size: 1.3rem;
+      margin-bottom: 0.8rem;
+      color: var(--light-text);
+    }
+
+    .feature-card p {
+      color: var(--gray-text);
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+
+    .steps {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 6rem 2rem;
+      position: relative;
+    }
+
+    .steps-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .steps-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .step {
+      display: flex;
+      gap: 2rem;
+      animation: slideInLeft 0.8s ease-out;
+      animation-fill-mode: both;
+    }
+
+    .step:nth-child(1) {
+      animation-delay: 0.1s;
+    }
+
+    .step:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .step:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+
+    .step-number {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--dark-bg);
+      flex-shrink: 0;
+    }
+
+    .step-content h3 {
+      font-size: 1.4rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .step-content p {
+      color: var(--gray-text);
+      font-size: 0.95rem;
+    }
+
+    .steps-image {
+      animation: slideInRight 0.8s ease-out;
+    }
+
+    .steps-image .image-card {
+      height: 400px;
+    }
+
+    .showcase {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 6rem 2rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .showcase-image {
+      animation: slideInLeft 0.8s ease-out;
+    }
+
+    .showcase-image .image-card {
+      height: 400px;
+    }
+
+    .showcase-content {
+      animation: slideInRight 0.8s ease-out;
+    }
+
+    .showcase-content h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.8rem;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .showcase-content p {
+      color: var(--gray-text);
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.8;
+    }
+
+    .cta-section {
+      max-width: 1000px;
+      margin: 6rem auto 0;
+      padding: 4rem 2rem;
+      background: transparent;
+      border: 1px solid rgba(255, 107, 53, 0.3);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      animation: fadeInUp 0.8s ease-out;
+    }
+
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(255, 107, 53, 0.1) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .cta-section h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cta-section p {
+      color: var(--gray-text);
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      position: relative;
+      z-index: 1;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    footer {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 3rem 2rem 1rem;
+      border-top: 1px solid rgba(255, 107, 53, 0.2);
+      margin-top: 6rem;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 3rem;
+      margin-bottom: 3rem;
+    }
+
+    .footer-section h4 {
+      font-size: 1.1rem;
+      margin-bottom: 1.5rem;
+      color: var(--primary);
+    }
+
+    .footer-section ul {
+      list-style: none;
+    }
+
+    .footer-section ul li {
+      margin-bottom: 0.8rem;
+    }
+
+    .footer-section a {
+      color: var(--gray-text);
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .footer-section a:hover {
+      color: var(--primary);
+    }
+
+    .footer-bottom {
+      text-align: center;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255, 107, 53, 0.1);
+      color: var(--gray-text);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+      }
+
+      .hero {
+        grid-template-columns: 1fr;
+        padding: 3rem 2rem;
+      }
+
+      .hero h1 {
+        font-size: 2.5rem;
+      }
+
+      .section-header h2 {
+        font-size: 2rem;
+      }
+
+      .steps-content,
+      .showcase {
+        grid-template-columns: 1fr;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+
+      .primary-btn,
+      .secondary-btn {
+        width: 100%;
+      }
+    }
+
+    .scroll-reveal {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    .scroll-reveal.active {
+      animation: fadeInUp 0.8s ease-out forwards;
+    }
+
+    .fade-img {
+      width: 400px;
+      mask-image: radial-gradient(circle, black 60%, transparent 100%);
+      -webkit-mask-image: radial-gradient(circle, black 60%, transparent 100%);
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <nav>
+      <div class="logo">iCodeSwift</div>
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#steps">How It Works</a></li>
+        <li><a href="#showcase">Showcase</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <button class="cta-button" onclick="window.location.href='editor.html'">Get Started</button>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-image">
+        <div class="image-card">
+          <img src="./resources/icodeswift_banner.png" alt="Hero Image" class="fade-img">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features" class="features">
+    <div class="section-header">
+      <h2>Powerful Features</h2>
+      <p>Everything you need to test your swift apps without Xcode or a Macbook.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <h3>Fast builds</h3>
+        <p>Our custom region-optimized instances allow fast Swift builds and execution.</p>
+      </div>
+      <div class="feature-card">
+        <h3>Detailed console log</h3>
+        <p>Our console streams build output directly so you can see native swift build errors</p>
+      </div>
+      <div class="feature-card">
+        <h3>Secure & Private</h3>
+        <p>Zero vulnerabilities on vuln tests and everything handled in LocalStorage, only your files get sent to a VPS.
+        </p>
+      </div>
+      <div class="feature-card">
+        <h3>Beautiful UI</h3>
+        <p>Added smooth animations and a custom monaco instance to enhance your experience with our design knowledge.
+        </p>
+      </div>
+      <div class="feature-card">
+        <h3>Simplicity</h3>
+        <p>We made every click self-explanatory and simple, so new users can use it as well.</p>
+      </div>
+      <div class="feature-card">
+        <h3>Check out iCodeWin if you're interested in iOS development</h3>
+        <p>iCodeWin is one of my first projects where I coded a lot manually and building it took me months.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="steps" class="steps">
+    <div class="section-header">
+      <h2>Get Started in 3 Steps</h2>
+      <p>From zero to hero in minutes.</p>
+    </div>
+    <div class="steps-content">
+      <div class="steps-list">
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h3>Click "Get Started"</h3>
+            <p>Click onto the "Get Started" to initialize a new project without needing a login</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h3>Code</h3>
+            <p>Use our intuitive editor and console to test your swift apps without requiring a Macbook.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h3>Debug</h3>
+            <p>Debug your swift app with our detailed console.</p>
+          </div>
+        </div>
+      </div>
+      <div class="steps-image">
+        <div class="image-card">
+          <img src="./resources/orange_swift_icon.png" alt="Steps Image">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="showcase" class="showcase">
+    <div class="showcase-image">
+      <div class="image-card">
+        <img src="./resources/icodeswift_alternative_icon.png" alt="Showcase Image">
+      </div>
+    </div>
+    <div class="showcase-content">
+      <h2>What You Can and Can't Create</h2>
+      <p>You can test your swift code in browser using the swift toolchain 5.8 without any limits. You can use your code
+        in console apps.</p>
+      <p>You cannot run GUI apps or download your Swift binaries due to VPS environment restrictions and privacy issues
+        with certain vulnerabilities.</p>
+      <div class="button-group">
+        <button class="primary-btn" onclick="window.location.href='editor.html'">Test it yourself</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact" class="cta-section">
+    <h2>Ready to Create Something Amazing?</h2>
+    <p>Join us and bring your wildest ideas to life. No experience necessary. Start building today.
+    </p>
+    <button class="primary-btn" onclick="window.location.href='editor.html'">Start for free</button>
+  </section>
+
+  <footer>
+    <div class="footer-grid">
+      <div class="footer-section">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="#docs">Documentation</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#about">About</a></li>
+          <li><a href="#blog">Blog</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Community</h4>
+        <ul>
+          <li><a href="#discord">Discord</a></li>
+          <li><a href="#twitter">Twitter</a></li>
+          <li><a href="#github">GitHub</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 iCodeSwift. Built with passion and creativity.</p>
+    </div>
+  </footer>
+
+  <script>
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    document.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('mouseenter', function () {
+        this.style.transform = 'scale(1.05)';
+      });
+      btn.addEventListener('mouseleave', function () {
+        this.style.transform = 'scale(1)';
+      });
+    });
+
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver(function (entries) {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+        }
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('.feature-card, .step, .showcase-content').forEach(el => {
+      observer.observe(el);
+    });
+  </script>
+</body>
+
+</html>

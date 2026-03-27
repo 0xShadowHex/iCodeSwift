@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>iCodeSwift</title>
+  <meta property="og:title" content="iCodeSwift - Editor" />
+  <meta property="og:description" content="iCodeSwift Editor initialized..." />
+  <meta property="og:image" content="https://icodeswift.pages.dev/resources/orange_swift_icon.png" />
+  <meta name="google-site-verification" content="YMTVv4ZX9GsSdNZMTwi7U5n1n_ATOZ77heuy_7TCdPQ" />
+  <link rel="icon" href="./resources/orange_swift_icon.png" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Rajdhani:wght@500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg-deep: #0d0d0f;
+      --bg-panel: #131316;
+      --bg-surface: #1a1a1f;
+      --bg-hover: #22222a;
+      --bg-active: #2a2a35;
+      --border: #2a2a35;
+      --border-bright: #3a3a4a;
+      --accent: #f05138;
+      --accent-dim: rgba(240, 81, 56, 0.15);
+      --accent-glow: rgba(240, 81, 56, 0.4);
+      --text-primary: #e8e8ee;
+      --text-secondary: #888899;
+      --text-dim: #555566;
+      --green: #3dd68c;
+      --red: #ff5555;
+      --blue: #1e90ff;
+      --yellow: #f0c060;
+      --header-h: 42px;
+      --explorer-w: 220px;
+      --console-h: 28vh;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      height: var(--header-h);
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    .logo {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: 0.08em;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-swift {
+      color: var(--accent);
+    }
+
+    .logo-icon {
+      width: 22px;
+      height: 22px;
+      background: var(--accent);
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+
+    .status-pill {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      background: var(--bg-surface);
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      transition: background 0.3s;
+    }
+
+    .status-dot.online {
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+    }
+
+    .status-dot.offline {
+      background: var(--red);
+    }
+
+    /* ── MAIN LAYOUT ── */
+    .workspace {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── FILE EXPLORER ── */
+    .explorer {
+      width: var(--explorer-w);
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .panel-header {
+      padding: 10px 12px 8px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-size: 14px;
+      line-height: 1;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .icon-btn:hover {
+      color: var(--text-primary);
+      background: var(--bg-hover);
+    }
+
+    .file-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 4px 0;
+    }
+
+    .file-list::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .file-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .file-list::-webkit-scrollbar-thumb {
+      background: var(--border-bright);
+      border-radius: 2px;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--text-secondary);
+      transition: background 0.1s, color 0.1s;
+      position: relative;
+    }
+
+    .file-item:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .file-item.active {
+      background: var(--bg-active);
+      color: var(--text-primary);
+    }
+
+    .file-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--accent);
+    }
+
+    .file-icon {
+      font-size: 13px;
+      opacity: 0.7;
+    }
+
+    .file-name {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .file-del {
+      opacity: 0;
+      background: none;
+      border: none;
+      color: var(--red);
+      cursor: pointer;
+      font-size: 13px;
+      padding: 0 2px;
+      line-height: 1;
+      transition: opacity 0.15s;
+    }
+
+    .file-item:hover .file-del {
+      opacity: 0.7;
+    }
+
+    .file-del:hover {
+      opacity: 1 !important;
+    }
+
+    .new-file-row {
+      padding: 8px 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .new-file-input {
+      width: 100%;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-bright);
+      color: var(--text-primary);
+      padding: 5px 8px;
+      font-family: inherit;
+      font-size: 11px;
+      border-radius: 3px;
+      outline: none;
+    }
+
+    .new-file-input:focus {
+      border-color: var(--accent);
+    }
+
+    .new-file-input::placeholder {
+      color: var(--text-dim);
+    }
+
+    /* ── EDITOR + CONSOLE COLUMN ── */
+    .main-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── EDITOR TABS ── */
+    .editor-tabs {
+      height: 36px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-end;
+      padding: 0 8px;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+
+    .editor-tab {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      border-radius: 4px 4px 0 0;
+      cursor: pointer;
+      border: 1px solid transparent;
+      border-bottom: none;
+      transition: all 0.1s;
+      background: transparent;
+    }
+
+    .editor-tab.active {
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      border-color: var(--border);
+    }
+
+    .no-file-msg {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-dim);
+      gap: 12px;
+      font-size: 13px;
+    }
+
+    .no-file-msg .big-icon {
+      font-size: 48px;
+      opacity: 0.3;
+    }
+
+    /* ── MONACO EDITOR ── */
+    #editor-container {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── CONSOLE ── */
+    .console-pane {
+      height: var(--console-h);
+      background: var(--bg-panel);
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .console-header {
+      padding: 0 12px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .console-title {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      flex: 1;
+    }
+
+    .run-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--green);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      box-shadow: 0 0 0 rgba(61, 214, 140, 0);
+      flex-shrink: 0;
+    }
+
+    .run-btn:hover {
+      background: #50e8a0;
+      box-shadow: 0 0 12px rgba(61, 214, 140, 0.5);
+      transform: scale(1.08);
+    }
+
+    .run-btn:active {
+      transform: scale(0.94);
+    }
+
+    .run-btn.running {
+      background: var(--yellow);
+      box-shadow: 0 0 12px rgba(240, 192, 96, 0.4);
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 8px rgba(240, 192, 96, 0.3);
+      }
+
+      50% {
+        box-shadow: 0 0 18px rgba(240, 192, 96, 0.6);
+      }
+    }
+
+    .run-icon {
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 5px 0 5px 9px;
+      border-color: transparent transparent transparent #000;
+      margin-left: 2px;
+    }
+
+    .run-spinner {
+      width: 10px;
+      height: 10px;
+      border: 2px solid rgba(0, 0, 0, 0.3);
+      border-top-color: #000;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .clear-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 11px;
+      padding: 3px 6px;
+      border-radius: 3px;
+      font-family: inherit;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .clear-btn:hover {
+      color: var(--text-secondary);
+      background: var(--bg-hover);
+    }
+
+    .console-output {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 14px;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .console-output::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .console-output::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .console-output::-webkit-scrollbar-thumb {
+      background: var(--border-bright);
+      border-radius: 2px;
+    }
+
+    .log-line {
+      display: flex;
+      gap: 10px;
+    }
+
+    .log-ts {
+      color: var(--text-dim);
+      font-size: 10px;
+      flex-shrink: 0;
+      padding-top: 1px;
+      min-width: 56px;
+    }
+
+    .log-msg {
+      flex: 1;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .log-msg.out {
+      color: var(--text-primary);
+    }
+
+    .log-msg.err {
+      color: var(--red);
+    }
+
+    .log-msg.sys {
+      color: var(--blue);
+    }
+
+    .log-msg.ok {
+      color: var(--green);
+    }
+
+    /* ── RESIZE HANDLE ── */
+    .resize-handle {
+      height: 4px;
+      background: transparent;
+      cursor: ns-resize;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+
+    .resize-handle:hover {
+      background: var(--accent);
+    }
+
+    /* Scrollbar global */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-bright);
+      border-radius: 3px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      iCode <span class="logo-swift">Swift</span>
+    </div>
+    <div style="font-size:11px; color:var(--text-dim); margin-left:4px;">v5.8</div>
+    <div class="status-pill">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">connecting…</span>
+    </div>
+  </header>
+
+  <!-- WORKSPACE -->
+  <div class="workspace">
+
+    <!-- EXPLORER -->
+    <div class="explorer">
+      <div class="panel-header">
+        Files
+        <button class="icon-btn" id="newFileBtn" title="New file">＋</button>
+      </div>
+      <div class="file-list" id="fileList"></div>
+      <div class="new-file-row" id="newFileRow" style="display:none">
+        <input class="new-file-input" id="newFileInput" placeholder="filename.swift" />
+      </div>
+    </div>
+
+    <!-- EDITOR + CONSOLE -->
+    <div class="main-col">
+      <div class="editor-tabs" id="editorTabs"></div>
+
+      <div id="editor-container">
+        <div class="no-file-msg" id="noFileMsg">
+          <div>No file open — create or select a file</div>
+        </div>
+      </div>
+
+      <!-- Resize handle -->
+      <div class="resize-handle" id="resizeHandle"></div>
+
+      <!-- CONSOLE -->
+      <div class="console-pane" id="consolePane">
+        <div class="console-header">
+          <span class="console-title">Console</span>
+          <button class="clear-btn" onclick="clearConsole()">clear</button>
+          <button class="run-btn" id="runBtn" title="run" onclick="runCurrent()" title="Run">
+            <div class="run-icon" id="runIcon"></div>
+            <div class="run-spinner" id="runSpinner"></div>
+          </button>
+        </div>
+        <div class="console-output" id="consoleOutput">
+          <div class="log-line"><span class="log-ts">--:--:--</span><span class="log-msg sys">Console initialized</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Monaco loader -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+
+  <script>
+    const BACKEND = 'https://swift-vps--nipanzuzuzu587.replit.app';
+    const STORAGE_KEY = 'swift_ide_files';
+
+    // ── State ──
+    let files = {};         // { name: content }
+    let activeFile = null;
+    let monacoEditor = null;
+    let monacoReady = false;
+
+    // ── Persistence ──
+    function saveFiles() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(files));
+    }
+
+    function loadFiles() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) files = JSON.parse(raw);
+      } catch (e) { }
+      if (Object.keys(files).length === 0) {
+        files['main.swift'] = `print("Greetings from 0xShadowHex")`;
+        saveFiles();
+      }
+    }
+
+    // ── File Explorer ──
+    function renderExplorer() {
+      const list = document.getElementById('fileList');
+      list.innerHTML = '';
+      Object.keys(files).sort().forEach(name => {
+        const item = document.createElement('div');
+        item.className = 'file-item' + (name === activeFile ? ' active' : '');
+        item.innerHTML = `<span class="file-icon">𔒝</span><span class="file-name">${name}</span><button class="file-del" title="Delete" onclick="deleteFile(event,'${name}')">✕</button>`;
+        item.onclick = () => openFile(name);
+        list.appendChild(item);
+      });
+    }
+
+    function openFile(name) {
+      // Save current content before switching
+      if (activeFile && monacoEditor) {
+        files[activeFile] = monacoEditor.getValue();
+        saveFiles();
+      }
+      activeFile = name;
+      renderExplorer();
+      renderTabs();
+      if (monacoEditor) {
+        monacoEditor.setValue(files[name] || '');
+        document.getElementById('noFileMsg').style.display = 'none';
+        monacoEditor.getContainerDomNode().style.display = '';
+      }
+    }
+
+    function deleteFile(e, name) {
+      e.stopPropagation();
+      if (!confirm(`Delete ${name}?`)) return;
+      delete files[name];
+      saveFiles();
+      if (activeFile === name) {
+        activeFile = null;
+        if (monacoEditor) {
+          monacoEditor.setValue('');
+          document.getElementById('noFileMsg').style.display = '';
+        }
+      }
+      renderExplorer();
+      renderTabs();
+    }
+
+    // ── Tabs ──
+    function renderTabs() {
+      const tabs = document.getElementById('editorTabs');
+      tabs.innerHTML = '';
+      if (activeFile) {
+        const tab = document.createElement('div');
+        tab.className = 'editor-tab active';
+        tab.innerHTML = `${activeFile}`;
+        tabs.appendChild(tab);
+      }
+    }
+
+    // ── New File ──
+    document.getElementById('newFileBtn').onclick = () => {
+      const row = document.getElementById('newFileRow');
+      row.style.display = 'block';
+      document.getElementById('newFileInput').value = '';
+      document.getElementById('newFileInput').focus();
+    };
+
+    document.getElementById('newFileInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        let name = document.getElementById('newFileInput').value.trim();
+        if (!name) return;
+        if (!name.endsWith('.swift')) name += '.swift';
+        files[name] = `print("Greetings from 0xShadowHex")`;
+        saveFiles();
+        document.getElementById('newFileRow').style.display = 'none';
+        renderExplorer();
+        openFile(name);
+      }
+      if (e.key === 'Escape') {
+        document.getElementById('newFileRow').style.display = 'none';
+      }
+    });
+
+    // ── Console ──
+    function ts() {
+      const d = new Date();
+      return [d.getHours(), d.getMinutes(), d.getSeconds()]
+        .map(x => String(x).padStart(2, '0')).join(':');
+    }
+
+    function log(msg, type = 'out') {
+      const out = document.getElementById('consoleOutput');
+      const line = document.createElement('div');
+      line.className = 'log-line';
+      line.innerHTML = `<span class="log-ts">${ts()}</span><span class="log-msg ${type}">${escHtml(msg)}</span>`;
+      out.appendChild(line);
+      out.scrollTop = out.scrollHeight;
+    }
+
+    function escHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function clearConsole() {
+      document.getElementById('consoleOutput').innerHTML = '';
+    }
+
+    // ── Run ──
+    async function runCurrent() {
+      if (!activeFile) { log('No file open.', 'err'); return; }
+      if (monacoEditor) {
+        files[activeFile] = monacoEditor.getValue();
+        saveFiles();
+      }
+      const code = files[activeFile];
+      if (!code || !code.trim()) { log('File is empty.', 'err'); return; }
+
+      const btn = document.getElementById('runBtn');
+      const icon = document.getElementById('runIcon');
+      const spinner = document.getElementById('runSpinner');
+      btn.classList.add('running');
+      icon.style.display = 'none';
+      spinner.style.display = 'block';
+
+      log(`Running ${activeFile}…`, 'sys');
+
+      try {
+        const blob = new Blob([code], { type: 'text/plain' });
+        const formData = new FormData();
+        formData.append('file', new File([blob], activeFile, { type: 'application/x-swift' }));
+
+        const res = await fetch(`${BACKEND}/execute`, { method: 'POST', body: formData });
+        const data = await res.json();
+
+        if (data.status === 'ok') {
+          const output = data.output || '';
+          if (output) {
+            output.split('\n').forEach(line => { if (line !== '') log(line, 'out'); });
+          } else {
+            log('(no output)', 'out');
+          }
+          log(`Exited, Ok`, 'ok');
+        } else {
+          const err = data.error || 'Unknown error';
+          err.split('\n').forEach(line => { if (line !== '') log(line, 'err'); });
+        }
+      } catch (e) {
+        log(`Connection error: ${e.message}`, 'err');
+      } finally {
+        btn.classList.remove('running');
+        icon.style.display = '';
+        spinner.style.display = 'none';
+      }
+    }
+
+    // Ctrl+Enter to run
+    document.addEventListener('keydown', e => {
+      if (e.ctrlKey && e.key === 'Enter') runCurrent();
+    });
+
+    // ── Status check ──
+    async function checkStatus() {
+      const dot = document.getElementById('statusDot');
+      const txt = document.getElementById('statusText');
+      try {
+        const res = await fetch(`${BACKEND}/health`, { method: 'GET', signal: AbortSignal.timeout(5000) });
+        if (res.ok) {
+          dot.className = 'status-dot online';
+          txt.textContent = 'iCodeSwift 5.8 ready';
+        } else throw new Error();
+      } catch {
+        dot.className = 'status-dot offline';
+        txt.textContent = 'server offline - Wait for us to fix this issue';
+      }
+    }
+
+    // ── Monaco init ──
+    require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' } });
+    require(['vs/editor/editor.main'], () => {
+      // Register Swift language
+      monaco.languages.register({ id: 'swift' });
+      monaco.languages.setMonarchTokensProvider('swift', {
+        keywords: [
+          'class', 'struct', 'enum', 'protocol', 'extension', 'func', 'var', 'let', 'if', 'else',
+          'for', 'while', 'do', 'switch', 'case', 'break', 'continue', 'return', 'import',
+          'true', 'false', 'nil', 'self', 'super', 'init', 'deinit', 'get', 'set', 'willSet', 'didSet',
+          'throws', 'throw', 'try', 'catch', 'guard', 'defer', 'in', 'is', 'as', 'async', 'await',
+          'typealias', 'associatedtype', 'where', 'static', 'override', 'final', 'open', 'public',
+          'internal', 'fileprivate', 'private', 'mutating', 'nonmutating', 'lazy', 'weak', 'unowned',
+          'inout', 'operator', 'precedencegroup', 'repeat', 'default', 'fallthrough', 'some', 'any'
+        ],
+        typeKeywords: ['Int', 'Double', 'Float', 'Bool', 'String', 'Character', 'Array', 'Dictionary',
+          'Set', 'Optional', 'Void', 'Never', 'Error', 'Result', 'Foundation'],
+        tokenizer: {
+          root: [
+            [/\/\/.*$/, 'comment'],
+            [/\/\*/, 'comment', '@multilineComment'],
+            [/"/, 'string', '@string'],
+            [/\b(true|false|nil)\b/, 'keyword.constant'],
+            [/\b\d+(\.\d+)?([eE][+-]?\d+)?\b/, 'number'],
+            [/\b[A-Z][A-Za-z0-9_]*\b/, 'type.identifier'],
+            [/\b(class|struct|enum|protocol|extension|func|var|let|if|else|for|while|do|switch|case|break|continue|return|import|self|super|init|deinit|throws|throw|try|catch|guard|defer|in|is|as|async|await|typealias|static|override|final|open|public|internal|fileprivate|private|mutating|nonmutating|lazy|weak|unowned|inout|repeat|default|fallthrough|some|any|where)\b/, 'keyword'],
+            [/[{}()\[\]]/, 'delimiter'],
+            [/[;,.]/, 'delimiter'],
+            [/[+\-*/%&|^!~<>=?:@#]/, 'operator'],
+            [/[a-z_]\w*/, 'identifier'],
+          ],
+          multilineComment: [
+            [/\*\//, 'comment', '@pop'],
+            [/[^*]+/, 'comment'],
+            [/./, 'comment'],
+          ],
+          string: [
+            [/\\./, 'string.escape'],
+            [/\\\(/, 'string.escape', '@interpolation'],
+            [/"/, 'string', '@pop'],
+            [/[^"\\]+/, 'string'],
+          ],
+          interpolation: [
+            [/\)/, 'string.escape', '@pop'],
+            { include: 'root' },
+          ],
+        }
+      });
+
+      // Swift autocomplete
+      monaco.languages.registerCompletionItemProvider('swift', {
+        provideCompletionItems: (model, position) => {
+          const suggestions = [
+            'print', 'let', 'var', 'func', 'class', 'struct', 'enum', 'protocol', 'extension',
+            'import', 'if', 'else', 'guard', 'for', 'while', 'return', 'switch', 'case',
+            'Foundation', 'Swift', 'String', 'Int', 'Double', 'Bool', 'Array', 'Dictionary',
+          ].map(kw => ({
+            label: kw,
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            insertText: kw,
+            range: {
+              startLineNumber: position.lineNumber,
+              endLineNumber: position.lineNumber,
+              startColumn: model.getWordUntilPosition(position).startColumn,
+              endColumn: position.column,
+            }
+          }));
+          return { suggestions };
+        }
+      });
+
+      // Dark theme matching our palette
+      monaco.editor.defineTheme('swiftdark', {
+        base: 'vs-dark',
+        inherit: true,
+        rules: [
+          { token: 'keyword', foreground: 'f05138', fontStyle: 'bold' },
+          { token: 'keyword.constant', foreground: 'c678dd' },
+          { token: 'type.identifier', foreground: '61afef' },
+          { token: 'identifier', foreground: 'e8e8ee' },
+          { token: 'string', foreground: '98c379' },
+          { token: 'string.escape', foreground: '56b6c2' },
+          { token: 'number', foreground: 'd19a66' },
+          { token: 'comment', foreground: '555566', fontStyle: 'italic' },
+          { token: 'operator', foreground: '56b6c2' },
+          { token: 'delimiter', foreground: 'abb2bf' },
+        ],
+        colors: {
+          'editor.background': '#13131600',
+          'editor.foreground': '#e8e8ee',
+          'editor.lineHighlightBackground': '#1a1a2a',
+          'editorLineNumber.foreground': '#3a3a4a',
+          'editorLineNumber.activeForeground': '#f05138',
+          'editor.selectionBackground': '#2a3a5a',
+          'editorCursor.foreground': '#f05138',
+          'editorIndentGuide.background': '#2a2a35',
+          'editorIndentGuide.activeBackground': '#3a3a4a',
+        }
+      });
+
+      // Create editor
+      monacoEditor = monaco.editor.create(document.getElementById('editor-container'), {
+        value: '',
+        language: 'swift',
+        theme: 'swiftdark',
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: 13,
+        lineHeight: 22,
+        minimap: { enabled: true, scale: 0.8 },
+        scrollBeyondLastLine: false,
+        automaticLayout: true,
+        renderLineHighlight: 'line',
+        bracketPairColorization: { enabled: true },
+        tabSize: 4,
+        wordWrap: 'off',
+        smoothScrolling: true,
+        cursorBlinking: 'phase',
+        cursorSmoothCaretAnimation: 'on',
+        padding: { top: 12, bottom: 12 },
+        renderWhitespace: 'none',
+        glyphMargin: false,
+      });
+
+      // Auto-save on change
+      monacoEditor.onDidChangeModelContent(() => {
+        if (activeFile) {
+          files[activeFile] = monacoEditor.getValue();
+          saveFiles();
+        }
+      });
+
+      monacoReady = true;
+      document.getElementById('noFileMsg').style.display = 'none';
+
+      // Open first file
+      const first = Object.keys(files).sort()[0];
+      if (first) openFile(first);
+      else document.getElementById('noFileMsg').style.display = 'flex';
+    });
+
+    // ── Resize handle ──
+    (function () {
+      const handle = document.getElementById('resizeHandle');
+      const consolePane = document.getElementById('consolePane');
+      let dragging = false, startY = 0, startH = 0;
+
+      handle.addEventListener('mousedown', e => {
+        dragging = true;
+        startY = e.clientY;
+        startH = consolePane.offsetHeight;
+        document.body.style.userSelect = 'none';
+        document.body.style.cursor = 'ns-resize';
+      });
+
+      document.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        const delta = startY - e.clientY;
+        const newH = Math.max(80, Math.min(window.innerHeight * 0.7, startH + delta));
+        consolePane.style.height = newH + 'px';
+      });
+
+      document.addEventListener('mouseup', () => {
+        dragging = false;
+        document.body.style.userSelect = '';
+        document.body.style.cursor = '';
+      });
+    })();
+
+    // ── Init ──
+    loadFiles();
+    renderExplorer();
+    checkStatus();
+    setInterval(checkStatus, 30000);
+  </script>
+</body>
+
+</html>
